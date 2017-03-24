@@ -1,5 +1,5 @@
 # puppet-mysql
-Puppet manifests for Mariadb10.1
+Puppet manifests for MariaDB 10.1
 
 Deabian8 version.
 Uses Hiera and Hiera-yaml (https://github.com/TomPoulton/hiera-eyaml):
