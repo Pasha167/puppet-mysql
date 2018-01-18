@@ -1,0 +1,139 @@
+---
+############################################### MYSQL parameters ##############################################
+profile::mysql::root_password: SUPERsecret 
+
+profile::mysql::backup_password: SUPERsecret
+
+profile::mysql::auth::svc_mysql_password: SUPERsecret 
+
+profile::mysql::auth::dbadmins:
+       - dbadmin@localhost
+# Below is default setting for my.cnf, that is used on each mysql server
+# If parameter should not be in my.cnf, set its value to :undef.
+# If parameter should be repeated in my.cnf with different values, use array:
+# replicate-do-db:
+#    - db1    
+#    - db2
+profile::mysql::maindir                : /opt/mysql
+profile::mysql::logdir                : "%{hiera('profile::mysql::maindir')}/log" 
+profile::mysql::params::options:
+    client:
+        port                           : 3306
+        socket                         : /var/run/mysqld/mysqld.sock
+
+    mysqld:
+        '# GENERAL #'                  : HEADER
+        user                           : mysql
+        default_storage_engine         : InnoDB
+        character_set_server           : utf8
+        collation_server               : utf8_bin
+        tmpdir                         : "%{hiera('profile::mysql::maindir')}/tmp"
+        socket                         : /var/run/mysqld/mysqld.sock
+        bind_address                   : '*'
+
+        '# MyISAM #'                   : HEADER
+        key_buffer_size                : 32M
+        myisam_recover                 : FORCE,BACKUP
+
+        '# SAFETY #'                   : HEADER
+        max_allowed_packet             : 256M
+        max_connect_errors             : 1000000
+        sysdate_is_now                 : 1
+        innodb_strict_mode             : 1
+
+        '# DATA STORAGE #'             : HEADER
+        datadir                        : "%{hiera('profile::mysql::maindir')}/data/"
+
+        '# BINARY LOGGING #'           : HEADER
+        max_binlog_size                : 1G
+        log_bin                        : "%{hiera('profile::mysql::logdir')}/%{hostname}-bin"
+        log_bin_index                  : "%{hiera('profile::mysql::logdir')}/%{hostname}-bin-index"
+        expire_logs_days               : 7
+        sync_binlog                    : 1
+        log_bin_trust_function_creators: 1
+        binlog_format                  : ROW
+        server_id                      : 999999 #change to last two ip actets
+        log_slave_updates              : 1
+#       slave_compressed_protocol     : ON
+#       gtid_domain_id                : 1
+#       replicate_same_server_id      : 0
+
+        '# SLAVE #'                    : HEADER
+        slave_parallel_threads         : 0
+        slave_max_allowed_packet       : 1073741824
+        relay_log                      : "%{hiera('profile::mysql::logdir')}/mysqld-relay-bin"
+        relay_log_index                : "%{hiera('profile::mysql::logdir')}/mysqld-relay-bin.index"
+        read_only                      : 0 
+
+        '# CACHES AND LIMITS #'        : HEADER
+        tmp_table_size                 : 32M
+        max_heap_table_size            : 32M
+        query_cache_type               : 0
+        query_cache_size               : 0
+        max_connections                : 250
+        thread_cache_size              : 50
+        open_files_limit               : 65535
+        table_definition_cache         : 1024
+        table_open_cache               : 2048
+
+        '# INNODB #'                   : HEADER
+        innodb_flush_method            : O_DIRECT
+        innodb_log_files_in_group      : 2
+        innodb_log_file_size           : 1G
+        innodb_log_buffer_size         : 8M
+        innodb_flush_log_at_trx_commit : 1
+        innodb_file_per_table          : 1
+        innodb_buffer_pool_size        : '' # 0.8 of total memory 
+        innodb_buffer_pool_instances   : 1
+        innodb_file_format             : Barracuda
+        innodb_file_format_max         : Barracuda
+        innodb_flush_neighbors         : 0
+        innodb_buffer_pool_dump_at_shutdown : 0
+        innodb_buffer_pool_load_at_startup : 0
+
+        '# LOGGING #'                  : HEADER
+        log_output                     : FILE
+        log_warnings                   : 2
+        log_error                      : "%{hiera('profile::mysql::logdir')}/%{hostname}.err"
+        log_queries_not_using_indexes  : 0
+        log_slow_admin_statements      : 0
+        slow_query_log                 : 1
+        slow_query_log_file            : "%{hiera('profile::mysql::logdir')}/mysql-slow.log"
+        long_query_time                : 10
+        general_log                    : 0
+        general_log_file               : "%{hiera('profile::mysql::logdir')}/mysql-general.log"
+
+        '# PERFORMANCE_SCHEMA #'       : HEADER
+        performance_schema             : 1
+        performance_schema_consumer_statements_digest : 1
+        performance_schema_consumer_events_statements_history_long : 1
+
+        '!includedir /etc/mysql/conf.d/': HEADER
+############################################### end MySQL parameters ##############################################
+
+############################################### Cassandra            #############################################
+profile::cassandra::password      : SUPERsecret 
+
+cassandra::baseline_settings      :
+  authenticator                   : PasswordAuthenticator
+  authorizer                      : CassandraAuthorizer
+  saved_caches_directory          : '/opt/cassandra/saved_caches'
+  hints_directory                 : '/var/lib/cassandra/hints'
+  commitlog_directory             : '/opt/cassandra/commitlog'
+  commitlog_sync                  : 'periodic'
+  commitlog_sync_period_in_ms     : 10000
+  data_file_directories           : 
+                                  - /opt/cassandra/data
+  listen_address                  : '127.0.0.1'
+  rpc_address                     : '0.0.0.0'
+  broadcast_rpc_address           : "%{::ipaddress}"
+  partitioner                     : 'org.apache.cassandra.dht.Murmur3Partitioner'
+  endpoint_snitch                 : 'SimpleSnitch'
+  start_native_transport          : true
+  seed_provider                   :
+      - 
+       class_name                 : 'org.apache.cassandra.locator.SimpleSeedProvider'
+       parameters                 :
+         -
+           seeds                  : '127.0.0.1'
+############################################### End Cassandra        ############################################

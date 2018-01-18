@@ -1,0 +1,21 @@
+### MANAGED BY PUPPET ###
+
+<% @options.map do |k,v| -%>
+<%   if v.is_a?(Hash) -%>
+[<%=   k %>]
+<%     v.map do |ki, vi| -%>
+<%       if vi == true or vi == '' -%>
+<%=        ki %>
+<%       elsif vi.is_a?(Array) -%>
+<%         vi.each do |vii| -%>
+<%=          ki + " "*( [37 - ki.length,0].max ) %> = <%= vii %>
+<%         end -%>
+<%       elsif vi == 'HEADER' %>
+<%=        ki %>
+<%       elsif ![:undef].include?(vi) -%>
+<%=        ki + " "*( [37 - ki.length,0].max ) %> = <%= vi %>
+<%       end -%>
+<%     end -%>
+<%   end %>
+<% end -%>
+
